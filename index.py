@@ -4,6 +4,7 @@
 # Part 4:
 import quandl
 import pandas as pd
+import pickle
 
 # api_key = open('quandleapikey.txt', 'r').read()
 
@@ -87,47 +88,71 @@ join = df1.join(df3)
 ## ^ Ducked out halfway through that video, pt. 6
 
 
-# Part 7 (Pickling -- lets us avoid the need for a CSV):
+# Part 7 (Pickling -- lets us avoid the need for a CSV, and for supervised machine learning):
 
 main_df = pd.DataFrame()
-prev_abbv = ''
-
-for ind, abbv in enumerate(fiddy[0][0][1:]):
-    # print(abbv)
-    # print(ind)
-    if (ind % 2 == 0):
-        prev_abbv = abbv
 
 
-    query = "FMAC/HPI_"+str(abbv)
-    # Wow this is awesome:
-    df = quandl.get(query, authtoken=api_key)
+def state_list():
+    fiddy = pd.read_html("https://simple.wikipedia.org/wiki/List_of_U.S._states")
+    return fiddy[0][0][1:]
 
-    # df.set_index("Date")
+def grab_initial_state_data():
+    states = state_list()
+    prev_abbv = ''
+    main_df = pd.DataFrame()
+    for ind, abbv in enumerate(fiddy[0][0][1:]):
+        if (ind % 2 == 0):
+            prev_abbv = abbv
 
-    # This correctly grabs first value in each df (i.e. 1975-1-1):
-    # print(df['Value'][0])
 
-    # print(df.index.name);
-    # print(df[])
-    # print(main_df.empty)
-    # print(df.head())
+        query = "FMAC/HPI_"+str(abbv)
+        # Wow this is awesome:
+        df = quandl.get(query, authtoken=api_key)
 
-    ## Hmm a tough roadblock -- seems to think index is value??
-    # ValueError: columns overlap but no suffix specified: Index(['Value'], dtype='object')
-    if main_df.empty:
-        main_df = df
-    else:
-        # print('else')
-        # main_df = main_df.join(df)
+        # This correctly grabs first value in each df (i.e. 1975-1-1):
+        # print(df['Value'][0])
 
-        # What do you know, we just had to add the thing it was telling us to add....
-        # Hmmm but we're only getting the odd-indexed ones, and we're doubling them....
-        main_df = main_df.join(df, lsuffix=str(prev_abbv), rsuffix=str(abbv))
-#
-print(main_df.head())
+        ## Hmm a tough roadblock -- seems to think index is value??
+        # ValueError: columns overlap but no suffix specified: Index(['Value'], dtype='object')
+        if main_df.empty:
+            main_df = df
+        else:
+            # What do you know, we just had to add the thing it was telling us to add....
+            # Hmmm but we're only getting the odd-indexed ones, and we're doubling them....
+            main_df = main_df.join(df, lsuffix=str(prev_abbv), rsuffix=str(abbv))
 
-# main_df.to_csv('alabama.csv')
+    # print(main_df.head())
+    # main_df.to_csv('alabama.csv')
+
+
+    pickle_out = open('fiddy.pickle', 'wb')
+    pickle.dump(main_df, pickle_out)
+    pickle_out.close()
+
+
+# grab_initial_state_data()
+
+# Soooo much faster:
+pickle_in = open('fiddy.pickle', 'rb')
+HPI_data = pickle.load(pickle_in)
+# print(HPI_data)
+
+# Using Pandas' version of pickling:
+# HPI_data.to_pickle('pickletest.pickle')
+# HPI_data2 = pd.read_pickle('pickletest.pickle')
+
+# print(HPI_data2)
+
+
+
+
+
+# Part 8: Correlation tables:
+
+
+
+
 
 
 
