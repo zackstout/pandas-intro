@@ -90,15 +90,26 @@ join = df1.join(df3)
 # Part 7 (Pickling -- lets us avoid the need for a CSV):
 
 main_df = pd.DataFrame()
+prev_abbv = ''
 
-for abbv in fiddy[0][0][1:]:
+for ind, abbv in enumerate(fiddy[0][0][1:]):
     # print(abbv)
+    # print(ind)
+    if (ind % 2 == 0):
+        prev_abbv = abbv
+
+
     query = "FMAC/HPI_"+str(abbv)
     # Wow this is awesome:
     df = quandl.get(query, authtoken=api_key)
 
     # df.set_index("Date")
 
+    # This correctly grabs first value in each df (i.e. 1975-1-1):
+    # print(df['Value'][0])
+
+    # print(df.index.name);
+    # print(df[])
     # print(main_df.empty)
     # print(df.head())
 
@@ -107,12 +118,16 @@ for abbv in fiddy[0][0][1:]:
     if main_df.empty:
         main_df = df
     else:
-        print('else')
-        main_df = main_df.join(df)
+        # print('else')
+        # main_df = main_df.join(df)
+
+        # What do you know, we just had to add the thing it was telling us to add....
+        # Hmmm but we're only getting the odd-indexed ones, and we're doubling them....
+        main_df = main_df.join(df, lsuffix=str(prev_abbv), rsuffix=str(abbv))
 #
-# print(main_df.head())
+print(main_df.head())
 
-
+# main_df.to_csv('alabama.csv')
 
 
 
