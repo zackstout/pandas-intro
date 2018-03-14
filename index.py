@@ -5,6 +5,9 @@
 import quandl
 import pandas as pd
 import pickle
+import matplotlib.pyplot as plt
+from matplotlib import style
+style.use('fivethirtyeight')
 
 # api_key = open('quandleapikey.txt', 'r').read()
 
@@ -110,6 +113,12 @@ def grab_initial_state_data():
         # Wow this is awesome:
         df = quandl.get(query, authtoken=api_key)
 
+        # From part 8:
+        # df = df.pct_change()
+        # Problem because of my column names:
+        name = 'Value' + str(abbv)
+        # df[name] = (df[name] - df[name][0]) / df[name][0] * 100
+
         # This correctly grabs first value in each df (i.e. 1975-1-1):
         # print(df['Value'][0])
 
@@ -125,37 +134,53 @@ def grab_initial_state_data():
     # print(main_df.head())
     # main_df.to_csv('alabama.csv')
 
-
-    pickle_out = open('fiddy.pickle', 'wb')
+    # pickle_out = open('fiddy.pickle', 'wb')
+    pickle_out = open('fiddy3.pickle', 'wb')
     pickle.dump(main_df, pickle_out)
     pickle_out.close()
 
 
 # grab_initial_state_data()
 
+
+# Hmmmm more problems due to column names....I have a feeling the API changed subtly.
+def HPI_Benchmark():
+    df = quandl.get("FMAC/HPI_USA", authtoken=api_key)
+    df["United States"] = (df["United States"] - df["United States"][0]) / df["United States"][0] * 100
+    return df
+
+fig = plt.figure()
+ax1 = plt.subplot2grid((1,1),(0,0))
+
+
+
 # Soooo much faster:
-pickle_in = open('fiddy.pickle', 'rb')
-HPI_data = pickle.load(pickle_in)
+# pickle_in = open('fiddy.pickle', 'rb')
+# HPI_data = pickle.load(pickle_in)
 # print(HPI_data)
 
 # Using Pandas' version of pickling:
 # HPI_data.to_pickle('pickletest.pickle')
-# HPI_data2 = pd.read_pickle('pickletest.pickle')
+HPI_data2 = pd.read_pickle('fiddy3.pickle')
 
 # print(HPI_data2)
 
 
 
 
+# Part 8: Correlation tables/percent change:
 
-# Part 8: Correlation tables:
+# Modifying cols:
+# HPI_data2['TX2'] = HPI_data2['ValueTX'] * 2
+# print(HPI_data2[['ValueTX', 'TX2']])
+benchmark = HPI_Benchmark()
 
 
+HPI_data2.plot(ax = ax1)
+benchmark.plot(ax = ax1, color='k', linewidth=10)
 
-
-
-
-
+plt.legend().remove()
+plt.show()
 
 
 
